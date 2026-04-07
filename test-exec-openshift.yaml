@@ -1,0 +1,15 @@
+---
+- name: Consultar Namespaces en OpenShift
+  hosts: localhost
+  gather_facts: no
+  tasks:
+
+    - name: Obtener lista de namespaces
+      kubernetes.core.k8s_info:
+        kind: Namespace
+      register: namespace_list
+
+    - name: Mostrar nombres de los namespaces
+      ansible.builtin.debug:
+        msg: "{{ item.metadata.name }}"
+      loop: "{{ namespace_list.resources }}"
