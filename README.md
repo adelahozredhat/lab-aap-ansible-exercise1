@@ -509,6 +509,195 @@ namespaces:
 
 ---
 
+### 10. SourceControlCredential (Automation Controller)
+
+**Qué hace este paso:** creas una credencial de tipo **Source Control** en el **Automation Controller** para que un **proyecto Git** pueda clonar playbooks desde tu Gitea (usuario/contraseña).
+
+#### 10.1 Listado de credenciales
+
+![Credentials — Automation Controller](images/SourceControlCredential1.png)
+
+- **Ruta:** **Automation Execution → Automation Controller → Infrastructure → Credentials**.
+- **Acción:** **+ Create credential**.
+
+#### 10.2 Formulario de alta
+
+![Create credential — Source Control](images/SourceControlCredential2.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `GiteaRepositoryCredential` |
+| Description | (vacío) |
+| Organization | `Default` |
+| Credential type | `Source Control` |
+| Username | `lab-user-1` |
+| Password | La contraseña del usuario Gitea del taller |
+| SCM Private Key / Private Key Passphrase | (vacíos; solo si tu entorno usa clave SSH) |
+
+- Pulsa **Create credential**.
+
+#### 10.3 Detalle de la credencial
+
+![GiteaRepositoryCredential — Details](images/SourceControlCredential3.png)
+
+- Verifica tipo **Source Control**, usuario `lab-user-1` y contraseña **Encrypted**.
+
+---
+
+### 11. Project (Automation Controller)
+
+**Qué hace este paso:** defines un **proyecto** en el Controller apuntando al repositorio Git del laboratorio (`lab-aap-ansible-exercise1`) para usar sus playbooks en plantillas de trabajo.
+
+#### 11.1 Listado de proyectos
+
+![Projects — listado con Demo Project](images/Project1.png)
+
+- **Ruta:** **Automation Execution → Automation Controller → Projects**.
+- **Acción:** **Create project**.
+
+#### 11.2 Formulario de alta
+
+![Create project — Git](images/Project2.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `lab-aap-ansible-exercise1` |
+| Description | (vacío) |
+| Organization | `Default` |
+| Execution environment | (ninguno en la captura) |
+| Source control type | `Git` |
+| Content signature validation credential | (ninguno) |
+| Source control URL | `https://repository-gitea-operator.apps.<tu-cluster>.dynamic.redhatworkshops.io/lab-user-1/lab-aap-ansible-exercise1.git` (ajusta host al de tu Gitea) |
+| Source control branch/tag/commit | (vacío) |
+| Source control refspec | (vacío) |
+| Source control credential | `GiteaRepositoryCredential` |
+| Clean | **Marcado** |
+| Delete / Track submodules / Update revision on launch / Allow branch override | Desmarcados |
+
+- Pulsa **Create project**.
+
+#### 11.3 Detalle — sincronización en curso
+
+![lab-aap-ansible-exercise1 — Details (Pending)](images/Project3.png)
+
+- **Last job status:** `Pending` mientras arranca la primera sincronización.  
+- En algunas capturas el enlace de credencial aparece como `GitlabRepositoryCredential`; debe ser **la misma credencial** que creaste (`GiteaRepositoryCredential`) si el nombre en pantalla difiere por entorno.
+
+#### 11.4 Detalle — sincronización correcta
+
+![lab-aap-ansible-exercise1 — Details (Success)](images/Project4.png)
+
+- **Last job status:** `Success`, **Source control revision** con hash Git, **Playbook directory** bajo `/var/lib/awx/projects` (ruta interna del controller).
+
+---
+
+### 12. DecisionEnvironment (Event-Driven Ansible)
+
+**Qué hace este paso:** registras un **decision environment**: imagen de contenedor que EDA usa para ejecutar **rulebooks** con las dependencias soportadas por Red Hat.
+
+#### 12.1 Listado vacío
+
+![Decision Environments — vacío](images/DecisionEnvironment1.png)
+
+- **Ruta:** **Automation Decisions → Event-Driven Ansible → Decision Environments**.
+- **Acción:** **Create decision environment**.
+
+#### 12.2 Formulario de alta
+
+![Create decision environment](images/DecisionEnvironment2.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `de-supported-rhel9:1.2` |
+| Description | (vacío) |
+| Organization | `Default` |
+| Image | `registry.redhat.io/ansible-automation-platform-24/de-supported-rhel9:1.2` |
+| Pull | En la captura aparece “Select pull option”; en el detalle final la política queda como **Always pull container before running** — elige la opción equivalente si tu UI lo muestra en el desplegable. |
+| Credential | (ninguno en la captura; añade credencial de registry solo si tu clúster la exige para `registry.redhat.io`) |
+
+- Pulsa **Create decision environment**.
+
+#### 12.3 Detalle del decision environment
+
+![de-supported-rhel9:1.2 — Details](images/DecisionEnvironment3.png)
+
+- Confirma **Image** y **Pull policy: Always pull container before running**.
+
+---
+
+### 13. EDASourceControlCredential (Automation Decisions)
+
+**Qué hace este paso:** creas una credencial **Source Control** en la sección **EDA** (distinta del almacén del Controller) para que los **proyectos EDA** puedan autenticarse contra el mismo repositorio Git.
+
+#### 13.1 Credenciales EDA vacías
+
+![EDA Credentials — vacío](images/EDASourceControlCredential1.png)
+
+- **Ruta:** **Automation Decisions → Event-Driven Ansible → Infrastructure → Credentials**.
+- **Acción:** **Create credential**.
+
+#### 13.2 Formulario de alta
+
+![EDA — Create credential — Source Control](images/EDASourceControlCredential2.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `GiteaRepositoryCredential` |
+| Description | (vacío) |
+| Organization | `Default` |
+| Credential type | `Source Control` |
+| Username | `lab-user-1` |
+| Password | Misma contraseña Gitea que en el paso 10 |
+| SCM Private Key / Private Key Passphrase | (vacíos) |
+
+#### 13.3 Detalle
+
+![EDA — GiteaRepositoryCredential — Details](images/EDASourceControlCredential3.png)
+
+---
+
+### 14. EDAProject (Automation Decisions)
+
+**Qué hace este paso:** defines un **proyecto EDA** que enlaza el repositorio donde están los **rulebooks** (contenido distinto del proyecto del Controller, aunque aquí se reutiliza el mismo repo de ejemplo).
+
+#### 14.1 Proyectos EDA vacíos
+
+![EDA Projects — vacío](images/EDAProject1.png)
+
+- **Ruta:** **Automation Decisions → Event-Driven Ansible → Projects** (no confundir con **Automation Controller → Projects**).
+- **Acción:** **Create project**.
+
+#### 14.2 Formulario de alta
+
+![EDA — Create project](images/EDAProject2.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `lab-aap-ansible-exercise1` |
+| Description | (vacío) |
+| Organization | `Default` |
+| Source control type | `Git` |
+| Source control URL | Mismo repo Git que en el paso 11 (`…/lab-user-1/lab-aap-ansible-exercise1.git`) |
+| Proxy / branch / refspec | (vacíos en la captura) |
+| Source control credential | `GiteaRepositoryCredential` (la credencial EDA del paso 13) |
+| Content signature validation credential | (ninguno) |
+| Verify SSL | **Desmarcado** en la captura |
+
+#### 14.3 Detalle — importación en ejecución
+
+![EDA — lab-aap-ansible-exercise1 — Details (Running)](images/EDAProject3.png)
+
+- **Status:** `Running` hasta que termine el clone/sync.
+
+#### 14.4 Detalle — importación completada
+
+![EDA — lab-aap-ansible-exercise1 — Details (Completed)](images/EDAProject4.png)
+
+- **Status:** `Completed`, **Git hash** visible.  
+- Si aparece un aviso de **Import error** indicando que no existe `extensions/eda/rulebooks` o `rulebooks` en la raíz del proyecto, el sync de Git ha funcionado pero aún **no hay rulebooks en esa ruta**; en este repositorio de laboratorio el ejemplo está en `extensions/eda/rulebooks/rulebook_webhook.yml` — asegúrate de que la rama sincronizada incluye esa estructura o ajusta el contenido del repo.
+
+---
+
 ## Comprobación opcional con el playbook de ejemplo
 
 En este repositorio, `test-exec-openshift.yaml` es un playbook de prueba que consulta namespaces en el clúster usando la colección `kubernetes.core`. Úsalo solo si el instructor ha configurado el proyecto y la credencial para ejecutarlo desde una plantilla de trabajo apuntando a tu inventario OpenShift.
@@ -519,7 +708,7 @@ En este repositorio, `test-exec-openshift.yaml` es un playbook de prueba que con
 
 | Archivo | Uso |
 |--------|-----|
-| `images/` | Capturas numeradas por bloque: `LoginAAP.png`, `Organization1–5.png`, `Team1–6.png`, `User1–6.png`, `UserTeam1–6.png`, `RolesOrganizationTeamAdmin1–5.png`, `RolesOrganizationTeamUser1–6.png`, `GetTokenOpenshiftUser1–3.png`, `OpenshiftCredentials1–2.png`, `OpenshiftInventory1–11.png`. |
+| `images/` | Capturas por bloque: `LoginAAP.png`, `Organization1–5.png`, `Team1–6.png`, `User1–6.png`, `UserTeam1–6.png`, `RolesOrganizationTeamAdmin1–5.png`, `RolesOrganizationTeamUser1–6.png`, `GetTokenOpenshiftUser1–3.png`, `OpenshiftCredentials1–2.png`, `OpenshiftInventory1–11.png`, `SourceControlCredential1–3.png`, `Project1–4.png`, `DecisionEnvironment1–3.png`, `EDASourceControlCredential1–3.png`, `EDAProject1–4.png`. |
 | `lab-aap-ansible/automation-platform-install-ansible-automation-platform.yaml` | Manifiesto de ejemplo de instalación de AAP y topología. |
 | `test-exec-openshift.yaml` | Playbook de ejemplo contra la API de OpenShift. |
 | `extensions/eda/rulebooks/rulebook_webhook.yml` | Ejemplo de rulebook EDA (webhook) para escenarios avanzados. |
