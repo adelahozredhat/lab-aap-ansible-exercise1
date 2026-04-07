@@ -1121,15 +1121,4 @@ En este repositorio, `test-exec-openshift.yaml` es un playbook de prueba que con
 
 ---
 
-## Referencia rápida de archivos
-
-| Archivo | Uso |
-|--------|-----|
-| `images/` | Por bloque: credenciales/inventario/proyectos/EDA (ver secciones 1–14), `MachineCredential1–7.png`, `RunCommandPing1–8.png`, `JobTemplate1–13.png`, `EDARHAAPCredential1–3.png`, `RulebookActivation1–4.png`, `CurlRulebook1–8.png`, `Workflow1–27.png`. |
-| `lab-aap-ansible/automation-platform-install-ansible-automation-platform.yaml` | Manifiesto de ejemplo de instalación de AAP y topología. |
-| `test-exec-openshift.yaml` | Playbook de ejemplo contra la API de OpenShift. |
-| `extensions/eda/rulebooks/rulebook_webhook.yml` | Ejemplo de rulebook EDA (webhook) para escenarios avanzados. |
-
----
-
 *Laboratorio **lab-aap-ansible-exercise1** — configuración inicial de AAP e integración con OpenShift.*
