@@ -611,7 +611,7 @@ namespaces:
 | Name | `de-supported-rhel9:1.2` |
 | Description | (vacío) |
 | Organization | `Default` |
-| Image | `registry.redhat.io/ansible-automation-platform-24/de-supported-rhel9:1.2` |
+| Image | `registry.redhat.io/ansible-automation-platform-26/de-supported-rhel9:1.2` |
 | Pull | En la captura aparece “Select pull option”; en el detalle final la política queda como **Always pull container before running** — elige la opción equivalente si tu UI lo muestra en el desplegable. |
 | Credential | (ninguno en la captura; añade credencial de registry solo si tu clúster la exige para `registry.redhat.io`) |
 
@@ -698,6 +698,419 @@ namespaces:
 
 ---
 
+### 15. MachineCredential
+
+**Qué hace este paso:** preparas la **clave SSH** del repositorio (`ssh_tests_connections/id_fedora_new`) y registras en el **Automation Controller** una credencial de tipo **Machine** para conectar por SSH con la VM Fedora del inventario.
+
+#### 15.1–15.3 Obtener la clave en Gitea
+
+![Repositorio del lab en Gitea](images/MachineCredential1.png)
+
+![Carpeta ssh_tests_connections](images/MachineCredential2.png)
+
+![Contenido de id_fedora_new — descargar o copiar](images/MachineCredential3.png)
+
+- En el repo del laboratorio abre **`ssh_tests_connections/`** y copia o descarga **`id_fedora_new`** (clave privada OpenSSH completa, incluidos `BEGIN` / `END`).
+
+#### 15.4 Listado de credenciales del Controller
+
+![Credentials — Create credential](images/MachineCredential4.png)
+
+- **Ruta:** **Automation Execution → Automation Controller → Infrastructure → Credentials → + Create credential**.
+
+#### 15.5 Adjuntar la clave (selector de fichero)
+
+![Create credential — seleccionar id_fedora_new](images/MachineCredential5.png)
+
+| Campo | Valor (captura intermedia) |
+|-------|----------------------------|
+| Name | `FedoraMachineCredential` |
+| Organization | `Default` |
+| Credential type | `Machine` |
+| Username | `ec2-user` (en esta captura; el resultado final del lab usa `user1` — ver siguiente imagen) |
+| SSH Private Key | Fichero `id_fedora_new` |
+
+#### 15.6 Formulario listo para crear
+
+![Create credential — Machine con user1](images/MachineCredential6.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `FedoraMachineCredential` |
+| Organization | `Default` |
+| Credential type | `Machine` |
+| Username | `user1` |
+| Password | (vacío) |
+| SSH Private Key | Contenido de `id_fedora_new` |
+| Privilege escalation | (sin método en la captura) |
+
+#### 15.7 Detalle de la credencial
+
+![FedoraMachineCredential — Details](images/MachineCredential7.png)
+
+---
+
+### 16. RunCommandPing
+
+**Qué hace este paso:** desde el inventario **OpenShift Virtualization** ejecutas un **comando ad hoc** con el módulo **`ping`** para validar conectividad SSH y Python en el host importado.
+
+#### 16.1 Inventarios
+
+![Inventories — OpenShiftVirtualizationInventory](images/RunCommandPing1.png)
+
+#### 16.2 Detalle del inventario
+
+![OpenshiftVirtualizationInventory — Details](images/RunCommandPing2.png)
+
+#### 16.3 Hosts — Run command
+
+![Hosts — virtualization-test-user1-fedora-user1 — Run command](images/RunCommandPing3.png)
+
+- Pestaña **Hosts**, marca el host y pulsa **Run command**.
+
+#### 16.4 Asistente — Details
+
+![Run command — módulo ping](images/RunCommandPing4.png)
+
+| Campo | Valor |
+|-------|--------|
+| Module | `ping` |
+| Arguments | (vacío) |
+| Verbosity | `0 (Normal)` |
+| Limit | `virtualization-test-user1-fedora-user1` |
+| Forks | `0` |
+| Privilege escalation | Desmarcado |
+
+#### 16.5 Execution environment
+
+![Run command — Default execution environment](images/RunCommandPing5.png)
+
+#### 16.6 Credential
+
+![Run command — FedoraMachineCredential](images/RunCommandPing6.png)
+
+#### 16.7 Review
+
+![Run command — Review](images/RunCommandPing7.png)
+
+- **Finish** y revisa la salida del job.
+
+#### 16.8 Salida del job `ping`
+
+![Job ping — Success](images/RunCommandPing8.png)
+
+- Debe aparecer **`"ping": "pong"`** para el host objetivo.
+
+---
+
+### 17. JobTemplate
+
+**Qué hace este paso:** creas la plantilla **`TestFedoraJobTemplate`** que ejecuta **`test-exec-fedora.yaml`** contra el inventario de virtualización, añades un **survey** para `target_host` y la lanzas con **`all`**.
+
+#### 17.1 Plantillas de automatización
+
+![Templates — Create template → Create job template](images/JobTemplate1.png)
+
+#### 17.2 Crear job template
+
+![Create job template — TestFedoraJobTemplate](images/JobTemplate2.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `TestFedoraJobTemplate` |
+| Job type | `Run` |
+| Inventory | `OpenShiftVirtualizationInventory` / `OpenshiftVirtualizationInventory` (según nombre en tu instancia) |
+| Project | `lab-aap-ansible-exercise1` |
+| Playbook | `test-exec-fedora.yaml` |
+| Execution environment | `Default execution environment` |
+| Credentials | `FedoraMachineCredential (Machine)` |
+| Forks | `0` |
+| Verbosity | `0 (Normal)` |
+| Job slicing | `1` |
+| Timeout | `0` |
+| Opciones (webhook, concurrent, etc.) | Desmarcadas en la captura |
+
+#### 17.3 Detalle de la plantilla
+
+![TestFedoraJobTemplate — Details](images/JobTemplate3.png)
+
+#### 17.4 Survey vacío
+
+![Survey — sin preguntas](images/JobTemplate4.png)
+
+#### 17.5 Crear pregunta del survey
+
+![Create survey question — target_host](images/JobTemplate5.png)
+
+| Campo | Valor |
+|-------|--------|
+| Question / Answer variable name | `target_host` |
+| Answer type | `Text` |
+| Required | Sí |
+| Default answer | `all` |
+
+#### 17.6–17.8 Survey habilitado
+
+![Survey enabled — target host](images/JobTemplate6.png)
+
+![Survey — misma configuración](images/JobTemplate7.png)
+
+![Survey — columna Name target_host](images/JobTemplate8.png)
+
+- Activa **Survey enabled** y comprueba la pregunta (**target host** / **`target_host`** según cómo muestre la UI).
+
+#### 17.9 Lanzamiento — paso Survey
+
+![Prompt on Launch — target_host: all](images/JobTemplate9.png)
+
+#### 17.10 Lanzamiento — Review
+
+![Prompt on Launch — Review con extra vars](images/JobTemplate10.png)
+
+```yaml
+target_host: all
+```
+
+#### 17.11 Job en ejecución
+
+![TestFedoraJobTemplate — Running](images/JobTemplate11.png)
+
+#### 17.12 Job — Details (Success)
+
+![TestFedoraJobTemplate — Job Details](images/JobTemplate12.png)
+
+#### 17.13 Job — Output (playbook)
+
+![TestFedoraJobTemplate — Output Success](images/JobTemplate13.png)
+
+---
+
+### 18. EDARHAAPCredential
+
+**Qué hace este paso:** en **EDA → Infrastructure → Credentials** creas una credencial **Red Hat Ansible Automation Platform** para que el rulebook pueda **lanzar trabajos** en el Automation Controller (API del controller).
+
+#### 18.1 Credenciales EDA (con Gitea ya creada)
+
+![EDA Credentials — Create credential](images/EDARHAAPCredential1.png)
+
+#### 18.2 Formulario
+
+![Create credential — Red Hat Ansible Automation Platform](images/EDARHAAPCredential2.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `EDARHAAPCredential` |
+| Organization | `Default` |
+| Credential type | `Red Hat Ansible Automation Platform` |
+| URL del controller | La base HTTPS de tu AAP (en captura: `https://example1-ansible-automation-platform….apps….dynamic.redhatworkshops.io`) |
+| Username | `admin` |
+| Password | Contraseña del usuario |
+| OAuth Token | (vacío) |
+| Verify SSL | Desmarcado |
+| Request Timeout | `10` |
+
+#### 18.3 Detalle (Host con `/api/controller/`)
+
+![EDARHAAPCredential — Details](images/EDARHAAPCredential3.png)
+
+- En el detalle el **Host** puede mostrarse ya resuelto con sufijo **`/api/controller/`** — debe apuntar al mismo entorno que usas en el navegador.
+
+---
+
+### 19. RulebookActivation
+
+**Qué hace este paso:** activas el rulebook **`rulebook_webhook.yml`** del proyecto EDA, con el **decision environment**, la credencial **EDARHAAPCredential** y el rulebook en marcha.
+
+#### 19.1 Rulebook Activations vacío
+
+![Rulebook Activations — Create](images/RulebookActivation1.png)
+
+#### 19.2 Formulario de activación
+
+![Create rulebook activation — RulebookActivationWebhook](images/RulebookActivation2.png)
+
+| Campo | Valor introducido |
+|-------|-------------------|
+| Name | `RulebookActivationWebhook` |
+| Organization | `Default` |
+| Project | `lab-aap-ansible-exercise1` |
+| Rulebook | `rulebook_webhook.yml` |
+| Event streams | (vacío en la captura; el source webhook queda definido en el rulebook) |
+| Credential | `EDARHAAPCredential` |
+| Decision environment | `de-supported-rhel9:1.2` |
+| Restart policy | `On failure` |
+| Log level | `Error` |
+| Rulebook activation enabled | **On** |
+| Variables | (vacío) |
+| Skip audit events | Desmarcado |
+
+#### 19.3 Detalle — Pending
+
+![RulebookActivationWebhook — Pending](images/RulebookActivation3.png)
+
+#### 19.4 Detalle — Running
+
+![RulebookActivationWebhook — Running](images/RulebookActivation4.png)
+
+- Cuando el worker arranca, el estado pasa a **Running** y **Number of rules** puede mostrar `1`.
+
+---
+
+### 20. CurlRulebook
+
+**Qué hace este paso:** disparas el webhook del rulebook con **`curl`** y compruebas en **Rule Audit** el evento, la carga útil y la acción **`run_job_template`** (y el job en el Controller).
+
+#### 20.1 Comando curl (ajusta la URL a tu route EDA)
+
+![Terminal — curl POST al webhook](images/CurlRulebook1.png)
+
+```bash
+curl -H "Content-Type: application/json" -X POST \
+  "https://eda-webhook-external1-ansible-automation-platform1.apps.<tu-cluster>.dynamic.redhatworkshops.io/" \
+  -d '{"status": "LanzarJob","host": "all", "message": "Lanzado"}'
+```
+
+- El valor **`status`** debe coincidir con la condición del rulebook (`rulebook_webhook.yml` usa `LanzarJob`).
+
+#### 20.2 Rule Audit — listado
+
+![Rule Audit — Evento Llamada Curl Success](images/CurlRulebook2.png)
+
+#### 20.3 Rule Audit — Details
+
+![Evento Llamada Curl — Details](images/CurlRulebook3.png)
+
+#### 20.4 Pestaña Events
+
+![Evento Llamada Curl — Events — ansible.eda.webhook](images/CurlRulebook4.png)
+
+#### 20.5 Detalle del evento (payload)
+
+![Event details — payload YAML](images/CurlRulebook5.png)
+
+#### 20.6 Pestaña Actions
+
+![Actions — run_job_template Success](images/CurlRulebook6.png)
+
+#### 20.7 Job lanzado desde EDA — Details
+
+![Jobs — TestFedoraJobTemplate — Details](images/CurlRulebook7.png)
+
+#### 20.8 Job — Output
+
+![TestFedoraJobTemplate — Output](images/CurlRulebook8.png)
+
+---
+
+### 21. Workflow
+
+**Qué hace este paso:** creas un **Workflow Job Template** llamado **`WorkflowExample`**, diseñas el grafo en el **Workflow Visualizer** (sincronización de fuente de inventario, plantilla de trabajo con survey, nodos de aprobación y enlaces **Run always** según las capturas) y ejecutas el flujo completando la **aprobación** manual.
+
+> Las capturas **`Workflow10.png`–`Workflow17.png`** muestran **variantes** del grafo (paralelo vs secuencial, nombres abreviados en nodos, etc.). Construye el flujo que te indique el instructor; la **línea roja** del laboratorio termina en: **Start → Approval → TestFedoraJobTemplate → sincronización de inventario** (p. ej. `OpenshiftVirtualizationSource`), **guardar**, **Launch workflow**, aprobar y verificar en **Jobs**.
+
+#### 21.1 Crear workflow job template
+
+![Templates — Create workflow job template](images/Workflow1.png)
+
+#### 21.2 Datos iniciales de la plantilla
+
+![Create workflow job template — WorkflowExample](images/Workflow2.png)
+
+| Campo | Valor |
+|-------|--------|
+| Name | `WorkflowExample` |
+| Organization | `Default` |
+| Inventory / Limit / SCM branch | (vacíos en la captura) |
+| Enable webhook / Concurrent jobs | Desmarcados |
+
+#### 21.3 Visualizador vacío
+
+![Workflow Visualizer — sin nodos](images/Workflow3.png)
+
+#### 21.4 Añadir nodo — Inventory Source Sync (detalles)
+
+![Add step — Inventory Source Sync — OpenShiftVirtualizationSource](images/Workflow4.png)
+
+#### 21.5 Añadir nodo — Review
+
+![Add step — Review inventory source](images/Workflow5.png)
+
+#### 21.6 Primer nodo en el lienzo
+
+![Visualizer — Start → nodo sync](images/Workflow6.png)
+
+#### 21.7 Añadir Job Template — Node details
+
+![Add step — Job Template TestFedoraJobTemplate](images/Workflow7.png)
+
+#### 21.8 Añadir Job Template — Survey
+
+![Add step — Survey target_host all](images/Workflow8.png)
+
+#### 21.9 Añadir Job Template — Review
+
+![Add step — Review extra vars target_host: all](images/Workflow9.png)
+
+#### 21.10–21.12 Variantes de grafo (paralelo / orden de nodos)
+
+![Visualizer — dos ramas desde Start](images/Workflow10.png)
+
+![Visualizer — dos nodos Run always](images/Workflow11.png)
+
+![Visualizer — secuencia Job → sync](images/Workflow12.png)
+
+#### 21.13 Añadir nodo Approval
+
+![Add step — Node type Approval](images/Workflow13.png)
+
+#### 21.14–21.17 Grafos con Approval, Job y sync
+
+![Visualizer — Approval + TestFedoraJobTemplate → OpenShiftGitOpsSource](images/Workflow14.png)
+
+![Visualizer — mismo esquema (detalle)](images/Workflow15.png)
+
+![Visualizer — Approval → TestTodosJobTemplate → OpenShiftClusterSource](images/Workflow16.png)
+
+![Visualizer — cursor en Save](images/Workflow17.png)
+
+> Los nombres **`TestTodosJobTemplate`**, **`OpenShiftClusterSource`**, etc., son de capturas concretas; al reproducir el lab usa **`TestFedoraJobTemplate`** y la **fuente de inventario / proyecto** que hayas definido.
+
+#### 21.18 Guardado y Launch workflow
+
+![Visualizer guardado — Launch workflow](images/Workflow18.png)
+
+#### 21.19 Job del workflow — Running
+
+![Jobs — WorkflowExample — Output Running](images/Workflow19.png)
+
+#### 21.20–21.22 Workflow Approvals
+
+![Workflow Approvals — Approve](images/Workflow20.png)
+
+![Modal — Approve workflow approvals](images/Workflow21.png)
+
+![Approval — Status Approved](images/Workflow22.png)
+
+#### 21.23 Jobs — Workflow Success
+
+![Jobs — WorkflowExample Success](images/Workflow23.png)
+
+#### 21.24–21.25 Output del workflow completado
+
+![WorkflowExample — Output grafo Success](images/Workflow24.png)
+
+![WorkflowExample — Output (variante)](images/Workflow25.png)
+
+#### 21.26 Salida del playbook del nodo Job Template
+
+![TestFedoraJobTemplate — Output (dentro del workflow)](images/Workflow26.png)
+
+#### 21.27 Salida del nodo de sync de inventario
+
+![OpenshiftVirtualizationInventory — OpenshiftVirtualizationSource — Output](images/Workflow27.png)
+
+---
+
 ## Comprobación opcional con el playbook de ejemplo
 
 En este repositorio, `test-exec-openshift.yaml` es un playbook de prueba que consulta namespaces en el clúster usando la colección `kubernetes.core`. Úsalo solo si el instructor ha configurado el proyecto y la credencial para ejecutarlo desde una plantilla de trabajo apuntando a tu inventario OpenShift.
@@ -708,7 +1121,7 @@ En este repositorio, `test-exec-openshift.yaml` es un playbook de prueba que con
 
 | Archivo | Uso |
 |--------|-----|
-| `images/` | Capturas por bloque: `LoginAAP.png`, `Organization1–5.png`, `Team1–6.png`, `User1–6.png`, `UserTeam1–6.png`, `RolesOrganizationTeamAdmin1–5.png`, `RolesOrganizationTeamUser1–6.png`, `GetTokenOpenshiftUser1–3.png`, `OpenshiftCredentials1–2.png`, `OpenshiftInventory1–11.png`, `SourceControlCredential1–3.png`, `Project1–4.png`, `DecisionEnvironment1–3.png`, `EDASourceControlCredential1–3.png`, `EDAProject1–4.png`. |
+| `images/` | Por bloque: credenciales/inventario/proyectos/EDA (ver secciones 1–14), `MachineCredential1–7.png`, `RunCommandPing1–8.png`, `JobTemplate1–13.png`, `EDARHAAPCredential1–3.png`, `RulebookActivation1–4.png`, `CurlRulebook1–8.png`, `Workflow1–27.png`. |
 | `lab-aap-ansible/automation-platform-install-ansible-automation-platform.yaml` | Manifiesto de ejemplo de instalación de AAP y topología. |
 | `test-exec-openshift.yaml` | Playbook de ejemplo contra la API de OpenShift. |
 | `extensions/eda/rulebooks/rulebook_webhook.yml` | Ejemplo de rulebook EDA (webhook) para escenarios avanzados. |
