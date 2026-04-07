@@ -365,7 +365,7 @@ Roles finales asignados al equipo **`TeamUserLabOrganization`** sobre **`LabOrga
 
 | Campo | Valor en la captura |
 |-------|---------------------|
-| Username or email | `user1` |
+| Username or email | `user1` (Usar tu usuario la laboratorio)|
 | Password | (oculta) |
 
 #### 7.2 Consola OpenShift — copiar comando de login
@@ -471,7 +471,7 @@ namespaces:
   - virtualization-test-user1
 ```
 
-(Ajusta el namespace si tu taller usa otro nombre.)
+(Ajusta el namespace si tu taller usa otro nombre. El formato estandar es virtualization-test-userX segun tu usuario de laboratorio)
 
 #### 9.6 Detalle de la fuente
 
@@ -530,8 +530,8 @@ namespaces:
 | Description | (vacío) |
 | Organization | `Default` |
 | Credential type | `Source Control` |
-| Username | `lab-user-1` |
-| Password | La contraseña del usuario Gitea del taller |
+| Username | `lab-user-1` (usar el indicado para tu laboratorio el formato estandar es lab-user-X)|
+| Password | La contraseña del usuario Gitea del taller, por defecto es `openshift`|
 | SCM Private Key / Private Key Passphrase | (vacíos; solo si tu entorno usa clave SSH) |
 
 - Pulsa **Create credential**.
@@ -567,7 +567,7 @@ namespaces:
 | Execution environment | (ninguno en la captura) |
 | Source control type | `Git` |
 | Content signature validation credential | (ninguno) |
-| Source control URL | `https://repository-gitea-operator.apps.<tu-cluster>.dynamic.redhatworkshops.io/lab-user-1/lab-aap-ansible-exercise1.git` (ajusta host al de tu Gitea) |
+| Source control URL | `https://repository-gitea-operator.apps.<tu-cluster>.dynamic.redhatworkshops.io/lab-user-1/lab-aap-ansible-exercise1.git` (ajusta host al de tu Gitea y el proyecto de tu usuario `lab-user-X`) |
 | Source control branch/tag/commit | (vacío) |
 | Source control refspec | (vacío) |
 | Source control credential | `GiteaRepositoryCredential` |
@@ -646,7 +646,7 @@ namespaces:
 | Description | (vacío) |
 | Organization | `Default` |
 | Credential type | `Source Control` |
-| Username | `lab-user-1` |
+| Username | `lab-user-1` (usar el indicado para tu laboratorio el formato estandar es lab-user-X)|
 | Password | Misma contraseña Gitea que en el paso 10 |
 | SCM Private Key / Private Key Passphrase | (vacíos) |
 
@@ -677,7 +677,7 @@ namespaces:
 | Description | (vacío) |
 | Organization | `Default` |
 | Source control type | `Git` |
-| Source control URL | Mismo repo Git que en el paso 11 (`…/lab-user-1/lab-aap-ansible-exercise1.git`) |
+| Source control URL | Mismo repo Git que en el paso 11 (`…/lab-user-1/lab-aap-ansible-exercise1.git`(ajusta host al de tu Gitea y el proyecto de tu usuario `lab-user-X`)) |
 | Proxy / branch / refspec | (vacíos en la captura) |
 | Source control credential | `GiteaRepositoryCredential` (la credencial EDA del paso 13) |
 | Content signature validation credential | (ninguno) |
@@ -727,7 +727,7 @@ namespaces:
 | Name | `FedoraMachineCredential` |
 | Organization | `Default` |
 | Credential type | `Machine` |
-| Username | `ec2-user` (en esta captura; el resultado final del lab usa `user1` — ver siguiente imagen) |
+| Username | `user1` (el usuario de tu laboratorio con el formato `userX`) |
 | SSH Private Key | Fichero `id_fedora_new` |
 
 #### 15.6 Formulario listo para crear
@@ -739,7 +739,7 @@ namespaces:
 | Name | `FedoraMachineCredential` |
 | Organization | `Default` |
 | Credential type | `Machine` |
-| Username | `user1` |
+| Username | `user1` (el usuario de tu laboratorio con el formato `userX`)|
 | Password | (vacío) |
 | SSH Private Key | Contenido de `id_fedora_new` |
 | Privilege escalation | (sin método en la captura) |
@@ -764,6 +764,8 @@ namespaces:
 
 #### 16.3 Hosts — Run command
 
+Ajustar al que nos aparece en nuestro hosts list
+
 ![Hosts — virtualization-test-user1-fedora-user1 — Run command](images/RunCommandPing3.png)
 
 - Pestaña **Hosts**, marca el host y pulsa **Run command**.
@@ -777,7 +779,7 @@ namespaces:
 | Module | `ping` |
 | Arguments | (vacío) |
 | Verbosity | `0 (Normal)` |
-| Limit | `virtualization-test-user1-fedora-user1` |
+| Limit | `virtualization-test-user1-fedora-user1` (dependera del host que hayamos seleccionado) |
 | Forks | `0` |
 | Privilege escalation | Desmarcado |
 
@@ -902,9 +904,9 @@ target_host: all
 | Name | `EDARHAAPCredential` |
 | Organization | `Default` |
 | Credential type | `Red Hat Ansible Automation Platform` |
-| URL del controller | La base HTTPS de tu AAP (en captura: `https://example1-ansible-automation-platform….apps….dynamic.redhatworkshops.io`) |
+| URL del controller | La base HTTPS de tu AAP (en captura: `https://example1-ansible-automation-platform….apps….dynamic.redhatworkshops.io/api/controller/` debera adaptarse la url a la de nuestra instancia de AAP y añadirle al final `/api/controller/` ya que estamos en una version superior a la 2.4) |
 | Username | `admin` |
-| Password | Contraseña del usuario |
+| Password | Contraseña del usuario (la contraseña sera tambien `admin`)|
 | OAuth Token | (vacío) |
 | Verify SSL | Desmarcado |
 | Request Timeout | `10` |
@@ -969,6 +971,8 @@ curl -H "Content-Type: application/json" -X POST \
   "https://eda-webhook-external1-ansible-automation-platform1.apps.<tu-cluster>.dynamic.redhatworkshops.io/" \
   -d '{"status": "LanzarJob","host": "all", "message": "Lanzado"}'
 ```
+
+- La url debera adaptarse segun nuestro usuario de laboratorio con el siguiente formato `https://eda-webhook-externalX-ansible-automation-platformX.apps.<tu-cluster>.dynamic.redhatworkshops.io/` donde la X es el numero de usuario
 
 - El valor **`status`** debe coincidir con la condición del rulebook (`rulebook_webhook.yml` usa `LanzarJob`).
 
