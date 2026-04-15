@@ -967,7 +967,7 @@ target_host: all
 ![Terminal — curl POST al webhook](images/CurlRulebook1.png)
 
 ```bash
-curl -H "Content-Type: application/json" -X POST \
+curl -k -H "Content-Type: application/json" -X POST \
   "https://eda-webhook-external1-ansible-automation-platform1.apps.<tu-cluster>.dynamic.redhatworkshops.io/" \
   -d '{"status": "LanzarJob","host": "all", "message": "Lanzado"}'
 ```
