@@ -966,10 +966,17 @@ target_host: all
 
 ![Terminal — curl POST al webhook](images/CurlRulebook1.png)
 
+Linux:
+
 ```bash
 curl -k -H "Content-Type: application/json" -X POST \
   "https://eda-webhook-external1-ansible-automation-platform1.apps.<tu-cluster>.dynamic.redhatworkshops.io/" \
   -d '{"status": "LanzarJob","host": "all", "message": "Lanzado"}'
+```
+
+Windows:
+```bash
+curl -k -H "Content-Type: application/json" -X POST -d "{\"status\": \"LanzarJob\", \"host\": \"all\", \"message\": \"Lanzado\"}" https://eda-webhook-external8-ansible-automation-platform8.apps.cluster-tnfld.dynamic.redhatworkshops.io
 ```
 
 - La url debera adaptarse segun nuestro usuario de laboratorio con el siguiente formato `https://eda-webhook-externalX-ansible-automation-platformX.apps.<tu-cluster>.dynamic.redhatworkshops.io/` donde la X es el numero de usuario
